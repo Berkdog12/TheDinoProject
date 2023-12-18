@@ -1,6 +1,7 @@
 import pygame
 from pygame import mixer
 from fighter import Fighter
+import button
 
 mixer.init()
 pygame.init()
@@ -20,6 +21,16 @@ FPS = 50
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 WHITE = (255, 255, 255)
+
+#define fonts
+font = pygame.font.SysFont("arialblack", 40)
+
+#define colours
+TEXT_COL = (255, 255, 255)
+
+game_paused = False
+menu_state = "main"
+
 
 #define game variables
 intro_count = 3
@@ -44,8 +55,28 @@ pygame.mixer.music.set_volume(0.5)
 pygame.mixer.music.play(-1, 0.0, 5000)
 sword_fx = pygame.mixer.Sound("assets/audio/sword.wav")
 sword_fx.set_volume(0.5)
-magic_fx = pygame.mixer.Sound("assets/audio/magic.wav")
+magic_fx = pygame.mixer.Sound("assets/audio/its-joever.mp3")
 magic_fx.set_volume(0.75)
+
+
+
+resume_img = pygame.image.load("button_resume.png").convert_alpha()
+options_img = pygame.image.load("button_options.png").convert_alpha()
+quit_img = pygame.image.load("button_quit.png").convert_alpha()
+video_img = pygame.image.load("button_video.png").convert_alpha()
+audio_img = pygame.image.load("button_audio.png").convert_alpha()
+keys_img = pygame.image.load("button_keys.png").convert_alpha()
+back_img = pygame.image.load("button_back.png").convert_alpha()
+
+#create button instances
+resume_button = button.button(404, 125, resume_img, 1)
+options_button = button.button(397, 250, options_img, 1)
+quit_button = button.button(436, 375, quit_img, 1)
+video_button = button.button(226, 75, video_img, 1)
+audio_button = button.button(225, 200, audio_img, 1)
+keys_button = button.button(246, 325, keys_img, 1)
+back_button = button.button(332, 450, back_img, 1)
+
 
 #load background image
 bg_image = pygame.image.load("assets/images/background/background.png").convert_alpha()
@@ -83,6 +114,7 @@ def draw_health_bar(health, x, y):
   pygame.draw.rect(screen, YELLOW, (x, y, 400 * ratio, 30))
 
 
+
 #create two instances of fighters
 fighter_1 = Fighter(1, 200, 260, False, WARRIOR_DATA, warrior_sheet, WARRIOR_ANIMATION_STEPS, sword_fx)
 fighter_2 = Fighter(2, 700, 260, True, WIZARD_DATA, wizard_sheet, WIZARD_ANIMATION_STEPS, magic_fx)
@@ -94,7 +126,39 @@ while run:
   clock.tick(FPS)
 
   #draw background
-  draw_bg()
+  draw_bg()  
+
+  if game_paused == True:
+    #check menu state
+    if menu_state == "main":
+      #draw pause screen buttons
+      if resume_button.draw(screen):
+        game_paused = False
+      if options_button.draw(screen):
+        menu_state = "options"
+      if quit_button.draw(screen):
+        run = False
+    #check if the options menu is open
+    if menu_state == "options":
+      #draw the different options buttons
+      if video_button.draw(screen):
+        print("Video Settings")
+      if audio_button.draw(screen):
+        print("Audio Settings")
+        joever = True
+      if keys_button.draw(screen):
+        print("Change Key Bindings")
+      if back_button.draw(screen):
+        menu_state = "main"
+  
+    
+
+  #event handler
+  for event in pygame.event.get():
+    if event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_SPACE:
+        game_paused = True
+        
 
 
   #show player stats
@@ -106,8 +170,9 @@ while run:
   #update countdown
   if intro_count <= 0:
     #move fighters
-    fighter_1.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_2, round_over)
-    fighter_2.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_1, round_over)
+    if game_paused == False:
+      fighter_1.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_2, round_over)
+      fighter_2.move(SCREEN_WIDTH, SCREEN_HEIGHT, screen, fighter_1, round_over)
   else:
     #display count timer
     draw_text(str(intro_count), count_font, RED, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 3)
@@ -117,8 +182,9 @@ while run:
       last_count_update = pygame.time.get_ticks()
 
   #update fighters
-  fighter_1.update()
-  fighter_2.update()
+  if game_paused == False:   
+    fighter_1.update()
+    fighter_2.update()
 
   #draw fighters
   fighter_1.draw(screen)
@@ -145,6 +211,9 @@ while run:
 
   #event handler
   for event in pygame.event.get():
+    if event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_SPACE:
+        game_paused = True
     if event.type == pygame.QUIT:
       run = False
 

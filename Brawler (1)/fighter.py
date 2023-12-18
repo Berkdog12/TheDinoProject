@@ -223,7 +223,7 @@ class Fighter():
                           target.health -= 10   
                           self.attackvar == 0
                         elif self.attackvar == 3:
-                          target.health -= 30
+                          target.health -= 100
                           self.attackvar == 0
                         elif self.attackvar == 4:
                           target.health -= 20
